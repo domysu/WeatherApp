@@ -56,7 +56,13 @@
     </property>
     <addaction name="actionAsile"/>
    </widget>
+   <widget class="QMenu" name="menuAha">
+    <property name="title">
+     <string>Aha</string>
+    </property>
+   </widget>
    <addaction name="menuTemperatura"/>
+   <addaction name="menuAha"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAsile">

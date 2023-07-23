@@ -10,10 +10,12 @@
 
 WeatherApp::WeatherApp(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::WeatherApp)
+    , ui(new Ui::WeatherApp) 
+
+
 {
     ui->setupUi(this);
-    
+    //ThisisAtest
 
 }
 

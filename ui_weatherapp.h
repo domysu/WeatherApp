@@ -35,6 +35,7 @@ public:
     QLabel *searchInfo;
     QMenuBar *menubar;
     QMenu *menuTemperatura;
+    QMenu *menuAha;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *WeatherApp)
@@ -70,12 +71,15 @@ public:
         menubar->setGeometry(QRect(0, 0, 565, 22));
         menuTemperatura = new QMenu(menubar);
         menuTemperatura->setObjectName("menuTemperatura");
+        menuAha = new QMenu(menubar);
+        menuAha->setObjectName("menuAha");
         WeatherApp->setMenuBar(menubar);
         statusbar = new QStatusBar(WeatherApp);
         statusbar->setObjectName("statusbar");
         WeatherApp->setStatusBar(statusbar);
 
         menubar->addAction(menuTemperatura->menuAction());
+        menubar->addAction(menuAha->menuAction());
         menuTemperatura->addAction(actionAsile);
 
         retranslateUi(WeatherApp);
@@ -91,6 +95,7 @@ public:
         searchBar->setText(QString());
         searchInfo->setText(QString());
         menuTemperatura->setTitle(QCoreApplication::translate("WeatherApp", "TempCheck", nullptr));
+        menuAha->setTitle(QCoreApplication::translate("WeatherApp", "Aha", nullptr));
     } // retranslateUi
 
 };
