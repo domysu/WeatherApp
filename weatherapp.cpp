@@ -7,6 +7,7 @@
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <QDebug>
 
 WeatherApp::WeatherApp(QWidget *parent)
     : QMainWindow(parent)
@@ -15,7 +16,6 @@ WeatherApp::WeatherApp(QWidget *parent)
 
 {
     ui->setupUi(this);
-    //ThisisAtest
 
 }
 
@@ -28,7 +28,57 @@ void WeatherApp::on_searchButton_clicked()
 {
     std::string location = ui->searchBar->text().toStdString();
     displayTemperature(location);
+    displayForecast(location);
 }
+ 
+
+void WeatherApp::displayForecast(const std::string& location)
+{
+    std::string coordinates = getCoordinates(location);
+
+    if (!coordinates.empty())
+    {
+        std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
+        std::string longitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lon").toString();
+        std::string latlon = "lat=" + latitude + "&lon=" + longitude;
+
+        ui->forecastList->clear(); // Clear the forecast list before adding new items
+
+        // Use a loop to get the forecast for each day (e.g., 5-day forecast)
+        for (int day = 0; day < 5; ++day)
+        {
+            qDebug() << "Fetching forecast data for day" << day + 1;
+            std::string forecastCoordinates = latlon;;
+            double forecastTemperature = getForecast(forecastCoordinates, day);
+
+            if (forecastTemperature != -1.0)
+            {
+                // Create a string to represent the forecast information for the current day
+                std::ostringstream oss;
+                oss << "Day " << day + 1 << ": " << forecastTemperature << " C";
+                std::string forecastInfo = oss.str();
+
+                // Add the forecast information as a new item in the QListWidget
+                QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(forecastInfo));
+                ui->forecastList->addItem(item);
+            }
+            else
+            {
+                // Handle the case when forecast data cannot be retrieved for the day
+                ui->errorInfo->setText("Failed to retrieve forecast data.");
+            }
+        }
+    }
+    else
+    {
+        ui->searchInfo->setText("Failed to retrieve coordinates.");
+    }
+}
+
+
+
+
+
 
 
 void WeatherApp::displayTemperature(const std::string& location)
@@ -49,6 +99,7 @@ void WeatherApp::displayTemperature(const std::string& location)
             oss << "Location: " << location << ", " << country << std::endl;
             oss << "Temperature: " << temperature << " C";
             ui->searchInfo->setText(QString::fromStdString(oss.str()));
+            qDebug()<<"Hi";
         }
         else
         {
@@ -60,6 +111,47 @@ void WeatherApp::displayTemperature(const std::string& location)
         ui->searchInfo->setText("Failed to retrieve coordinates.");
     }
 }
+double WeatherApp::getForecast(const std::string& coordinates, int day)
+{
+    Poco::Net::HTTPClientSession session("api.openweathermap.org", 80);
+    std::string url = "/data/2.5/forecast?" + coordinates + "&appid=5d313375c665cd03e039cf939e0327be&units=metric&cnt=5";
+    Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, url, Poco::Net::HTTPMessage::HTTP_1_1);
+
+    Poco::Net::HTTPResponse response;
+    qDebug() << "in getForecast before sending request!";
+    session.sendRequest(request);
+    std::istream& rs = session.receiveResponse(response);
+    qDebug() << "in getForecast after sending request!" << response.getStatus();
+
+    if (response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK)
+    {
+        qDebug() << "in getForecast if statement!";
+        Poco::JSON::Parser parser;
+        Poco::Dynamic::Var result = parser.parse(rs);
+        Poco::JSON::Object::Ptr rootObject = result.extract<Poco::JSON::Object::Ptr>();
+
+        if (rootObject->has("list"))
+        {
+            Poco::JSON::Array::Ptr forecastArray = rootObject->getArray("list");
+            if (day >= 0 && day < forecastArray->size())
+            {
+                Poco::JSON::Object::Ptr forecastObject = forecastArray->getObject(day);
+                Poco::JSON::Object::Ptr mainObject = forecastObject->getObject("main");
+                double forecastTemperature = mainObject->get("temp");
+                return forecastTemperature;
+            }
+        }
+    }
+
+    // Handle the case when forecast data cannot be retrieved or is empty
+    qDebug() << "Failed to retrieve forecast data!";
+    return -1.0;
+}
+
+
+
+
+
 double WeatherApp::getTemperature(const std::string& coordinates)
 {
     Poco::Net::HTTPClientSession session("api.openweathermap.org", 80);

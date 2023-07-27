@@ -14,12 +14,10 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenu>
-#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
-#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -29,58 +27,42 @@ class Ui_WeatherApp
 public:
     QAction *actionAsile;
     QWidget *centralwidget;
-    QVBoxLayout *verticalLayout;
     QPushButton *searchButton;
     QLineEdit *searchBar;
     QLabel *searchInfo;
-    QMenuBar *menubar;
-    QMenu *menuTemperatura;
-    QMenu *menuAha;
+    QListWidget *forecastList;
+    QLabel *errorInfo;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *WeatherApp)
     {
         if (WeatherApp->objectName().isEmpty())
             WeatherApp->setObjectName("WeatherApp");
-        WeatherApp->resize(565, 593);
+        WeatherApp->resize(510, 525);
         actionAsile = new QAction(WeatherApp);
         actionAsile->setObjectName("actionAsile");
         centralwidget = new QWidget(WeatherApp);
         centralwidget->setObjectName("centralwidget");
-        verticalLayout = new QVBoxLayout(centralwidget);
-        verticalLayout->setObjectName("verticalLayout");
         searchButton = new QPushButton(centralwidget);
         searchButton->setObjectName("searchButton");
-
-        verticalLayout->addWidget(searchButton);
-
+        searchButton->setGeometry(QRect(10, 50, 491, 24));
         searchBar = new QLineEdit(centralwidget);
         searchBar->setObjectName("searchBar");
+        searchBar->setGeometry(QRect(10, 20, 491, 21));
         searchBar->setFrame(true);
-
-        verticalLayout->addWidget(searchBar);
-
         searchInfo = new QLabel(centralwidget);
         searchInfo->setObjectName("searchInfo");
-
-        verticalLayout->addWidget(searchInfo);
-
+        searchInfo->setGeometry(QRect(10, 90, 491, 121));
+        forecastList = new QListWidget(centralwidget);
+        forecastList->setObjectName("forecastList");
+        forecastList->setGeometry(QRect(10, 250, 491, 192));
+        errorInfo = new QLabel(centralwidget);
+        errorInfo->setObjectName("errorInfo");
+        errorInfo->setGeometry(QRect(30, 460, 71, 16));
         WeatherApp->setCentralWidget(centralwidget);
-        menubar = new QMenuBar(WeatherApp);
-        menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 565, 22));
-        menuTemperatura = new QMenu(menubar);
-        menuTemperatura->setObjectName("menuTemperatura");
-        menuAha = new QMenu(menubar);
-        menuAha->setObjectName("menuAha");
-        WeatherApp->setMenuBar(menubar);
         statusbar = new QStatusBar(WeatherApp);
         statusbar->setObjectName("statusbar");
         WeatherApp->setStatusBar(statusbar);
-
-        menubar->addAction(menuTemperatura->menuAction());
-        menubar->addAction(menuAha->menuAction());
-        menuTemperatura->addAction(actionAsile);
 
         retranslateUi(WeatherApp);
 
@@ -94,8 +76,7 @@ public:
         searchButton->setText(QCoreApplication::translate("WeatherApp", "Search", nullptr));
         searchBar->setText(QString());
         searchInfo->setText(QString());
-        menuTemperatura->setTitle(QCoreApplication::translate("WeatherApp", "TempCheck", nullptr));
-        menuAha->setTitle(QCoreApplication::translate("WeatherApp", "Aha", nullptr));
+        errorInfo->setText(QString());
     } // retranslateUi
 
 };

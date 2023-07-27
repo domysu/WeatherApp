@@ -20,8 +20,11 @@ private slots:
 
     void on_searchButton_clicked();
     void displayTemperature(const std::string& location);
+    void displayForecast(const std::string& location);
+    double getForecast(const std::string& coordinates, int day);
     double getTemperature(const std::string& coordinates);
     std::string getCoordinates(const std::string& location);
+    
 
 private:
     Ui::WeatherApp *ui;

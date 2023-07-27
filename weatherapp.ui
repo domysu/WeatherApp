@@ -6,63 +6,79 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>565</width>
-    <height>593</height>
+    <width>510</width>
+    <height>525</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>WeatherApp</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QPushButton" name="searchButton">
-      <property name="text">
-       <string>Search</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="searchBar">
-      <property name="text">
-       <string/>
-      </property>
-      <property name="frame">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="searchInfo">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>565</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuTemperatura">
-    <property name="title">
-     <string>TempCheck</string>
+   <widget class="QPushButton" name="searchButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>491</width>
+      <height>24</height>
+     </rect>
     </property>
-    <addaction name="actionAsile"/>
-   </widget>
-   <widget class="QMenu" name="menuAha">
-    <property name="title">
-     <string>Aha</string>
+    <property name="text">
+     <string>Search</string>
     </property>
    </widget>
-   <addaction name="menuTemperatura"/>
-   <addaction name="menuAha"/>
+   <widget class="QLineEdit" name="searchBar">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>491</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="searchInfo">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>90</y>
+      <width>491</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="forecastList">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>250</y>
+      <width>491</width>
+      <height>192</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="errorInfo">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>460</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAsile">
