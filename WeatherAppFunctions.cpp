@@ -1,0 +1,10 @@
+#include "weatherapp.h"
+#include "ui_weatherapp.h"
+#include <iostream>
+#include <sstream>
+#include <Poco/JSON/Parser.h>
+#include <Poco/JSON/Object.h>
+#include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPRequest.h>
+#include <Poco/Net/HTTPResponse.h>
+#include <QDebug>

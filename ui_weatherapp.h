@@ -32,13 +32,14 @@ public:
     QLabel *searchInfo;
     QListWidget *forecastList;
     QLabel *errorInfo;
+    QLabel *forecastInfo;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *WeatherApp)
     {
         if (WeatherApp->objectName().isEmpty())
             WeatherApp->setObjectName("WeatherApp");
-        WeatherApp->resize(510, 525);
+        WeatherApp->resize(510, 523);
         actionAsile = new QAction(WeatherApp);
         actionAsile->setObjectName("actionAsile");
         centralwidget = new QWidget(WeatherApp);
@@ -55,10 +56,13 @@ public:
         searchInfo->setGeometry(QRect(10, 90, 491, 121));
         forecastList = new QListWidget(centralwidget);
         forecastList->setObjectName("forecastList");
-        forecastList->setGeometry(QRect(10, 250, 491, 192));
+        forecastList->setGeometry(QRect(10, 260, 491, 192));
         errorInfo = new QLabel(centralwidget);
         errorInfo->setObjectName("errorInfo");
         errorInfo->setGeometry(QRect(30, 460, 71, 16));
+        forecastInfo = new QLabel(centralwidget);
+        forecastInfo->setObjectName("forecastInfo");
+        forecastInfo->setGeometry(QRect(340, 310, 151, 111));
         WeatherApp->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(WeatherApp);
         statusbar->setObjectName("statusbar");
@@ -77,6 +81,7 @@ public:
         searchBar->setText(QString());
         searchInfo->setText(QString());
         errorInfo->setText(QString());
+        forecastInfo->setText(QCoreApplication::translate("WeatherApp", "TextLabel", nullptr));
     } // retranslateUi
 
 };

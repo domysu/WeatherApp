@@ -7,7 +7,12 @@
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <Poco/DateTime.h>
+#include <Poco/Timestamp.h>
 #include <QDebug>
+#include <ctime>
+#include <chrono>
+
 
 WeatherApp::WeatherApp(QWidget *parent)
     : QMainWindow(parent)
@@ -16,6 +21,9 @@ WeatherApp::WeatherApp(QWidget *parent)
 
 {
     ui->setupUi(this);
+    ui->forecastInfo->hide();
+    
+
 
 }
 
@@ -24,9 +32,31 @@ WeatherApp::~WeatherApp()
     delete ui;
 }
 
+void WeatherApp::on_forecastList_itemClicked(QListWidgetItem* item)
+{
+    ui->forecastInfo->setVisible(true);
+
+    // Extract the day of the week from the selected item's text
+    QString forecastText = item->text();
+    QStringList forecastParts = forecastText.split(":");
+    if (forecastParts.size() > 1)
+    {
+        QString dayOfWeek = forecastParts[0].trimmed(); // Get the day of the week (e.g., "Sunday")
+        // Update the textLabel to display the day of the week
+        ui->forecastInfo->setText(dayOfWeek);
+
+    }
+    
+
+
+
+}
+
 void WeatherApp::on_searchButton_clicked()
 {
     std::string location = ui->searchBar->text().toStdString();
+    ui->searchBar->setFocus();
+    ui->searchBar->clear();
     displayTemperature(location);
     displayForecast(location);
 }
@@ -45,17 +75,18 @@ void WeatherApp::displayForecast(const std::string& location)
         ui->forecastList->clear(); // Clear the forecast list before adding new items
 
         // Use a loop to get the forecast for each day (e.g., 5-day forecast)
-        for (int day = 0; day < 5; ++day)
+        for (int day = 1; day < 5; ++day)
         {
-            qDebug() << "Fetching forecast data for day" << day + 1;
-            std::string forecastCoordinates = latlon;;
-            double forecastTemperature = getForecast(forecastCoordinates, day);
+            qDebug() << "Fetching forecast data for day" << day;
+            double forecastTemperature = getForecast(latlon, day);
 
             if (forecastTemperature != -1.0)
             {
+                std::string dayOfWeek = getDayOfWeek(day);
+
                 // Create a string to represent the forecast information for the current day
                 std::ostringstream oss;
-                oss << "Day " << day + 1 << ": " << forecastTemperature << " C";
+                oss << dayOfWeek << ": " << forecastTemperature << " C";
                 std::string forecastInfo = oss.str();
 
                 // Add the forecast information as a new item in the QListWidget
@@ -76,41 +107,6 @@ void WeatherApp::displayForecast(const std::string& location)
 }
 
 
-
-
-
-
-
-void WeatherApp::displayTemperature(const std::string& location)
-{
-    std::string coordinates = getCoordinates(location);
-
-    if (!coordinates.empty())
-    {
-        std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
-        std::string longitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lon").toString();
-        std::string country = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("country").toString();
-        std::string latlon = "lat=" + latitude + "&lon=" + longitude;
-
-        double temperature = getTemperature(latlon);
-        if (temperature != -1.0)
-        {
-            std::ostringstream oss;
-            oss << "Location: " << location << ", " << country << std::endl;
-            oss << "Temperature: " << temperature << " C";
-            ui->searchInfo->setText(QString::fromStdString(oss.str()));
-            qDebug()<<"Hi";
-        }
-        else
-        {
-            ui->searchInfo->setText("Failed to retrieve temperature.");
-        }
-    }
-    else
-    {
-        ui->searchInfo->setText("Failed to retrieve coordinates.");
-    }
-}
 double WeatherApp::getForecast(const std::string& coordinates, int day)
 {
     Poco::Net::HTTPClientSession session("api.openweathermap.org", 80);
@@ -149,7 +145,36 @@ double WeatherApp::getForecast(const std::string& coordinates, int day)
 }
 
 
+void WeatherApp::displayTemperature(const std::string& location)
+{
+    std::string coordinates = getCoordinates(location);
 
+    if (!coordinates.empty())
+    {
+        std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
+        std::string longitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lon").toString();
+        std::string country = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("country").toString();
+        std::string latlon = "lat=" + latitude + "&lon=" + longitude;
+
+        double temperature = getTemperature(latlon);
+        if (temperature != -1.0)
+        {
+            std::ostringstream oss;
+            oss << "Location: " << location << ", " << country << std::endl;
+            oss << "Temperature: " << temperature << " C";
+            ui->searchInfo->setText(QString::fromStdString(oss.str()));
+            qDebug() << "Hi";
+        }
+        else
+        {
+            ui->searchInfo->setText("Failed to retrieve temperature.");
+        }
+    }
+    else
+    {
+        ui->searchInfo->setText("Failed to retrieve coordinates.");
+    }
+}
 
 
 double WeatherApp::getTemperature(const std::string& coordinates)
@@ -177,6 +202,10 @@ double WeatherApp::getTemperature(const std::string& coordinates)
         return -1.0;
     }
 }
+
+
+
+
 std::string WeatherApp::getCoordinates(const std::string& location)
 {
     Poco::Net::HTTPClientSession session("api.openweathermap.org", 80);
@@ -198,4 +227,23 @@ std::string WeatherApp::getCoordinates(const std::string& location)
     {
         return "";
     }
+
 }
+std::string WeatherApp::getDayOfWeek(int day)
+{
+    // Get the current date and time
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+
+    // Add the number of days (day - 1) to the current date
+    std::tm* date = std::localtime(&t);
+    date->tm_mday += day - 1;
+    std::mktime(date);
+
+    // Get the day of the week as a string
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%A", date);
+    return std::string(buffer);
+}
+
+
