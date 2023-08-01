@@ -26,6 +26,7 @@ private slots:
     double getTemperature(const std::string& coordinates);
     std::string getCoordinates(const std::string& location);
     std::string getDayOfWeek(int day);
+    void getForecastInfo(const std::string& coordinates, int day);
     
 
     void on_forecastList_itemClicked(QListWidgetItem *item);

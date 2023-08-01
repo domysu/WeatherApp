@@ -22,6 +22,7 @@ WeatherApp::WeatherApp(QWidget *parent)
 {
     ui->setupUi(this);
     ui->forecastInfo->hide();
+    ui->forecastInfo->setWordWrap(true);
     
 
 
@@ -35,15 +36,20 @@ WeatherApp::~WeatherApp()
 void WeatherApp::on_forecastList_itemClicked(QListWidgetItem* item)
 {
     ui->forecastInfo->setVisible(true);
+    std::string latlon = item->data(Qt::UserRole).value<std::string>();
 
+    double forecastTemperature = item->data(Qt::UserRole + 1).value<double>(); // Retrieve temperature from data
+    int day = item->data(Qt::UserRole + 2).value<int>();
+    qDebug() << "In forecastList itemclicked function: " << latlon << " " << day << " " << forecastTemperature;
     // Extract the day of the week from the selected item's text
     QString forecastText = item->text();
     QStringList forecastParts = forecastText.split(":");
     if (forecastParts.size() > 1)
     {
         QString dayOfWeek = forecastParts[0].trimmed(); // Get the day of the week (e.g., "Sunday")
-        // Update the textLabel to display the day of the week
-        ui->forecastInfo->setText(dayOfWeek);
+
+        getForecastInfo(latlon, day);
+        
 
     }
     
@@ -91,6 +97,12 @@ void WeatherApp::displayForecast(const std::string& location)
 
                 // Add the forecast information as a new item in the QListWidget
                 QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(forecastInfo));
+               
+                item->setData(Qt::UserRole, QVariant::fromValue(latlon)); // Save coordinates as data
+                QString latlondq= item->data(Qt::UserRole).value<QString>();
+                qDebug() << latlondq;
+                item->setData(Qt::UserRole + 1, QVariant::fromValue(forecastTemperature)); // Save temperature as data
+                item->setData(Qt::UserRole + 2, QVariant::fromValue(day));
                 ui->forecastList->addItem(item);
             }
             else
@@ -163,7 +175,7 @@ void WeatherApp::displayTemperature(const std::string& location)
             oss << "Location: " << location << ", " << country << std::endl;
             oss << "Temperature: " << temperature << " C";
             ui->searchInfo->setText(QString::fromStdString(oss.str()));
-            qDebug() << "Hi";
+            
         }
         else
         {
@@ -245,5 +257,63 @@ std::string WeatherApp::getDayOfWeek(int day)
     std::strftime(buffer, sizeof(buffer), "%A", date);
     return std::string(buffer);
 }
+void WeatherApp::getForecastInfo(const std::string& coordinates, int day)
+{
+    Poco::Net::HTTPClientSession session("api.openweathermap.org", 80);
+    std::string url = "/data/2.5/forecast/daily?" + coordinates + "&appid=5d313375c665cd03e039cf939e0327be&units=metric&cnt=5";
+    Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, url, Poco::Net::HTTPMessage::HTTP_1_1);
+    Poco::Net::HTTPResponse response;
 
+    qDebug() << "in getForecastInfo before sending request!";
+    session.sendRequest(request);
+    std::istream& rs = session.receiveResponse(response);
+    qDebug() << "in getForecastInfo after sending request!" << response.getStatus() << coordinates;
+
+    if (response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK)
+    {
+        try
+        {
+            Poco::JSON::Parser parser;
+            Poco::Dynamic::Var result = parser.parse(rs);
+            Poco::JSON::Object::Ptr rootObject = result.extract<Poco::JSON::Object::Ptr>();
+            if (rootObject->has("list"))
+            {
+                qDebug() << "In getForecastInfo if statement!";
+                Poco::JSON::Array::Ptr forecastArray = rootObject->getArray("list");
+                if (day >= 0 && day < forecastArray->size())
+                {
+                    qDebug() << "In getForecastInfo second if statement!";
+                    Poco::JSON::Object::Ptr forecastObject = forecastArray->getObject(day);
+                    Poco::JSON::Object::Ptr mainObject = forecastObject->getObject("temp");
+                    Poco::JSON::Array::Ptr weatherArray = forecastObject->getArray("weather");
+                    Poco::JSON::Object::Ptr weatherObject = weatherArray->getObject(0);
+                    std::stringstream responseStream;
+                    responseStream << rs.rdbuf();
+                    std::string jsonResponse = responseStream.str();
+                    qDebug() << "JSON Response:" << QString::fromStdString(jsonResponse);
+
+                    double maxTemperature = mainObject->getValue<double>("max");
+                    double minTemperature = mainObject->getValue<double>("min");
+                    std::string rainInfo = weatherObject->getValue<std::string>("description");
+
+                    std::ostringstream oss;
+                    oss << "Maximum temperature: " << maxTemperature << " C\n";
+                    oss << "Minimum temperature: " << minTemperature << " C\n";
+                    oss << "Weather conditions: <b>" << rainInfo << "</b>";
+                    ui->forecastInfo->setText(QString::fromStdString(oss.str()));
+                }
+            }
+        }
+        catch (Poco::Exception& ex)
+        {
+            qDebug() << "Exception occurred while parsing forecast data: " << ex.displayText().c_str();
+            ui->forecastInfo->setText("Failed to parse forecast data.");
+        }
+    }
+    else
+    {
+        qDebug() << "Failed to retrieve forecast data! Status code: " << response.getStatus();
+        ui->forecastInfo->setText("Failed to retrieve forecast data.");
+    }
+}
 

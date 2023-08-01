@@ -82,9 +82,9 @@
    <widget class="QLabel" name="forecastInfo">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>130</x>
       <y>310</y>
-      <width>151</width>
+      <width>361</width>
       <height>111</height>
      </rect>
     </property>

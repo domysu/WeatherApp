@@ -62,7 +62,7 @@ public:
         errorInfo->setGeometry(QRect(30, 460, 71, 16));
         forecastInfo = new QLabel(centralwidget);
         forecastInfo->setObjectName("forecastInfo");
-        forecastInfo->setGeometry(QRect(340, 310, 151, 111));
+        forecastInfo->setGeometry(QRect(130, 310, 361, 111));
         WeatherApp->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(WeatherApp);
         statusbar->setObjectName("statusbar");
