@@ -27,11 +27,16 @@ private slots:
     std::string getCoordinates(const std::string& location);
     std::string getDayOfWeek(int day);
     void getForecastInfo(const std::string& coordinates, int day);
+    void displayHourlyForecastTabs(const std::string& location);
+    void hourlyForecastInfo(const std::string& location, int index);
     
 
     void on_forecastList_itemClicked(QListWidgetItem *item);
 
+    void on_tabWidget_tabBarClicked(int index);
+
 private:
     Ui::WeatherApp *ui;
+    std::string originalSearchQuery;
 };
 #endif // WEATHERAPP_H

@@ -18,6 +18,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
+#include <QtWidgets/QTabWidget>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -33,42 +34,54 @@ public:
     QListWidget *forecastList;
     QLabel *errorInfo;
     QLabel *forecastInfo;
+    QTabWidget *tabWidget;
+    QLabel *tabWidgetLabel;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *WeatherApp)
     {
         if (WeatherApp->objectName().isEmpty())
             WeatherApp->setObjectName("WeatherApp");
-        WeatherApp->resize(510, 523);
+        WeatherApp->resize(623, 536);
         actionAsile = new QAction(WeatherApp);
         actionAsile->setObjectName("actionAsile");
         centralwidget = new QWidget(WeatherApp);
         centralwidget->setObjectName("centralwidget");
         searchButton = new QPushButton(centralwidget);
         searchButton->setObjectName("searchButton");
-        searchButton->setGeometry(QRect(10, 50, 491, 24));
+        searchButton->setGeometry(QRect(10, 50, 591, 21));
         searchBar = new QLineEdit(centralwidget);
         searchBar->setObjectName("searchBar");
-        searchBar->setGeometry(QRect(10, 20, 491, 21));
+        searchBar->setGeometry(QRect(10, 20, 591, 21));
         searchBar->setFrame(true);
         searchInfo = new QLabel(centralwidget);
         searchInfo->setObjectName("searchInfo");
-        searchInfo->setGeometry(QRect(10, 90, 491, 121));
+        searchInfo->setGeometry(QRect(20, 100, 181, 61));
         forecastList = new QListWidget(centralwidget);
         forecastList->setObjectName("forecastList");
-        forecastList->setGeometry(QRect(10, 260, 491, 192));
+        forecastList->setGeometry(QRect(10, 260, 591, 191));
         errorInfo = new QLabel(centralwidget);
         errorInfo->setObjectName("errorInfo");
         errorInfo->setGeometry(QRect(30, 460, 71, 16));
         forecastInfo = new QLabel(centralwidget);
         forecastInfo->setObjectName("forecastInfo");
-        forecastInfo->setGeometry(QRect(130, 310, 361, 111));
+        forecastInfo->setGeometry(QRect(350, 370, 241, 71));
+        tabWidget = new QTabWidget(centralwidget);
+        tabWidget->setObjectName("tabWidget");
+        tabWidget->setEnabled(true);
+        tabWidget->setGeometry(QRect(270, 80, 291, 111));
+        tabWidgetLabel = new QLabel(centralwidget);
+        tabWidgetLabel->setObjectName("tabWidgetLabel");
+        tabWidgetLabel->setGeometry(QRect(280, 99, 271, 81));
         WeatherApp->setCentralWidget(centralwidget);
         statusbar = new QStatusBar(WeatherApp);
         statusbar->setObjectName("statusbar");
         WeatherApp->setStatusBar(statusbar);
 
         retranslateUi(WeatherApp);
+
+        tabWidget->setCurrentIndex(-1);
+
 
         QMetaObject::connectSlotsByName(WeatherApp);
     } // setupUi
@@ -82,6 +95,7 @@ public:
         searchInfo->setText(QString());
         errorInfo->setText(QString());
         forecastInfo->setText(QCoreApplication::translate("WeatherApp", "TextLabel", nullptr));
+        tabWidgetLabel->setText(QString());
     } // retranslateUi
 
 };

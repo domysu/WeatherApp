@@ -22,6 +22,8 @@ WeatherApp::WeatherApp(QWidget *parent)
 {
     ui->setupUi(this);
     ui->forecastInfo->hide();
+    ui->tabWidget->hide();
+    ui->tabWidgetLabel->hide();
     ui->forecastInfo->setWordWrap(true);
     
 
@@ -40,7 +42,7 @@ void WeatherApp::on_forecastList_itemClicked(QListWidgetItem* item)
 
     double forecastTemperature = item->data(Qt::UserRole + 1).value<double>(); // Retrieve temperature from data
     int day = item->data(Qt::UserRole + 2).value<int>();
-    qDebug() << "In forecastList itemclicked function: " << latlon << " " << day << " " << forecastTemperature;
+   // qDebug() << "In forecastList itemclicked function: " << latlon << " " << day << " " << forecastTemperature;
     // Extract the day of the week from the selected item's text
     QString forecastText = item->text();
     QStringList forecastParts = forecastText.split(":");
@@ -58,20 +60,30 @@ void WeatherApp::on_forecastList_itemClicked(QListWidgetItem* item)
 
 }
 
+
 void WeatherApp::on_searchButton_clicked()
 {
     std::string location = ui->searchBar->text().toStdString();
     ui->searchBar->setFocus();
+    originalSearchQuery = location;
     ui->searchBar->clear();
     displayTemperature(location);
     displayForecast(location);
+    displayHourlyForecastTabs(location);
+}
+void WeatherApp::on_tabWidget_tabBarClicked(int index)
+{
+   
+    hourlyForecastInfo(originalSearchQuery, index);
+
 }
  
 
 void WeatherApp::displayForecast(const std::string& location)
 {
     std::string coordinates = getCoordinates(location);
-
+    
+   
     if (!coordinates.empty())
     {
         std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
@@ -247,9 +259,9 @@ std::string WeatherApp::getDayOfWeek(int day)
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
 
-    // Add the number of days (day - 1) to the current date
+   
     std::tm* date = std::localtime(&t);
-    date->tm_mday += day - 1;
+    date->tm_mday += day;
     std::mktime(date);
 
     // Get the day of the week as a string
@@ -264,10 +276,10 @@ void WeatherApp::getForecastInfo(const std::string& coordinates, int day)
     Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, url, Poco::Net::HTTPMessage::HTTP_1_1);
     Poco::Net::HTTPResponse response;
 
-    qDebug() << "in getForecastInfo before sending request!";
+    //qDebug() << "in getForecastInfo before sending request!";
     session.sendRequest(request);
     std::istream& rs = session.receiveResponse(response);
-    qDebug() << "in getForecastInfo after sending request!" << response.getStatus() << coordinates;
+    //qDebug() << "in getForecastInfo after sending request!" << response.getStatus() << coordinates;
 
     if (response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK)
     {
@@ -299,7 +311,7 @@ void WeatherApp::getForecastInfo(const std::string& coordinates, int day)
                     std::ostringstream oss;
                     oss << "Maximum temperature: " << maxTemperature << " C\n";
                     oss << "Minimum temperature: " << minTemperature << " C\n";
-                    oss << "Weather conditions: <b>" << rainInfo << "</b>";
+                    oss << "Weather conditions: " << rainInfo;
                     ui->forecastInfo->setText(QString::fromStdString(oss.str()));
                 }
             }
@@ -316,4 +328,154 @@ void WeatherApp::getForecastInfo(const std::string& coordinates, int day)
         ui->forecastInfo->setText("Failed to retrieve forecast data.");
     }
 }
+
+void WeatherApp::displayHourlyForecastTabs(const std::string& location)
+{
+    ui->tabWidget->show();
+    std::string coordinates = getCoordinates(location);
+    
+    if (!coordinates.empty()) {
+        std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
+        std::string longitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lon").toString();
+        std::string country = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("country").toString();
+        std::string latlon = "lat=" + latitude + "&lon=" + longitude;
+
+        Poco::Net::HTTPClientSession session("pro.openweathermap.org", 80);
+        std::string url = "/data/2.5/forecast/hourly?" + latlon + "&appid=03e6e9c064ef314d8013524db009b12c&units=metric&cnt=4";
+        Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, url, Poco::Net::HTTPMessage::HTTP_1_1);
+        qDebug() << "in displayHourlyForecastTabs function";
+        Poco::Net::HTTPResponse response;
+
+        session.sendRequest(request);
+        std::istream& rs = session.receiveResponse(response);
+        qDebug() << "not in list forecasta" << response.getStatus();
+        if (response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK)
+        {
+            qDebug() << "not in list forecastaaaaaaaa";
+            Poco::JSON::Parser parser;
+            Poco::Dynamic::Var result = parser.parse(rs);
+            Poco::JSON::Object::Ptr rootObject = result.extract<Poco::JSON::Object::Ptr>();
+
+
+            if (rootObject->has("list"))
+            {
+                qDebug() << "In list forecast";
+                Poco::JSON::Array::Ptr forecastArray = rootObject->getArray("list");
+
+                // Clear existing tabs before adding new ones
+                ui->tabWidget->clear();
+
+                // Get current time
+                std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+                std::time_t t = std::chrono::system_clock::to_time_t(now);
+                std::tm* date = std::localtime(&t);
+                int currentHour = date->tm_hour;
+
+                // Define time ranges for tabs (adjust as needed)
+                int startHour = currentHour;
+                int endHour = startHour + 5;
+            
+
+                // Create tabs and widgets for each time range
+                for (int i = startHour; i < endHour; ++i)
+                {
+
+                    // Create a widget for the tab
+                    QWidget* tabWidget = new QWidget;
+                    
+                    
+            ui->tabWidget->addTab(tabWidget, QString::fromStdString(std::to_string(i) + ":00"));
+            ui->tabWidgetLabel->show();
+            
+
+
+                }
+            }
+        }
+    }
+}
+void WeatherApp::hourlyForecastInfo(const std::string& location, int index)
+{
+    std::string coordinates = getCoordinates(location);
+    qDebug() << "In hourlyForecastInfo before checking if coordinates empty";
+    if (!coordinates.empty()) {
+        //qDebug() << "In hourlyForecastInfo after checking if coordinates empty";
+        std::string latitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lat").toString();
+        std::string longitude = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("lon").toString();
+        std::string country = Poco::JSON::Parser().parse(coordinates).extract<Poco::JSON::Array::Ptr>()->getObject(0)->get("country").toString();
+        std::string latlon = "lat=" + latitude + "&lon=" + longitude;
+
+        Poco::Net::HTTPClientSession session("pro.openweathermap.org", 80);
+        std::string url = "/data/2.5/forecast/hourly?" + latlon + "&appid=03e6e9c064ef314d8013524db009b12c&units=metric&cnt=8";
+        Poco::Net::HTTPRequest request(Poco::Net::HTTPRequest::HTTP_GET, url, Poco::Net::HTTPMessage::HTTP_1_1);
+   
+        Poco::Net::HTTPResponse response;
+
+        session.sendRequest(request);
+        std::istream& rs = session.receiveResponse(response);
+        //qDebug() << "In hourlyForecastInfo before checking if request is good" << response.getStatus();
+        if (response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK)
+        {
+            
+            Poco::JSON::Parser parser;
+            Poco::Dynamic::Var result = parser.parse(rs);
+            Poco::JSON::Object::Ptr rootObject = result.extract<Poco::JSON::Object::Ptr>();
+
+
+            if (rootObject->has("list"))
+            {
+               
+                Poco::JSON::Array::Ptr forecastArray = rootObject->getArray("list");
+                Poco::JSON::Object::Ptr forecastObject = forecastArray->getObject(index);
+                Poco::JSON::Object::Ptr mainObject = forecastObject->getObject("main");
+                Poco::JSON::Array::Ptr weatherArray = forecastObject->getArray("weather");
+                Poco::JSON::Object::Ptr weatherObject = weatherArray->getObject(0);
+                double Temperature = mainObject->getValue<double>("temp");
+                std::stringstream responseStream;
+                responseStream << rs.rdbuf();
+                std::string jsonResponse = responseStream.str();
+
+                //qDebug() << "in HourlyForecastInfo function" << response.getStatus();
+                std::ostringstream oss;
+                
+
+                switch (index)
+                {
+                case 0:
+                    oss << Temperature;
+                    ui->tabWidgetLabel->setText("Temperature: " + QString::fromStdString(oss.str()));
+                    break;
+                case 1:
+                    oss << Temperature;
+                    ui->tabWidgetLabel->setText("Temperature: " + QString::fromStdString(oss.str()));
+                    break;
+                case 2:
+                    oss << Temperature;
+                    ui->tabWidgetLabel->setText("Temperature: " + QString::fromStdString(oss.str()));
+                    break;
+                case 3:
+                    oss << Temperature;
+                    ui->tabWidgetLabel->setText("Temperature: " + QString::fromStdString(oss.str()));
+                    break;
+                case 4:
+                    oss << Temperature;
+                    ui->tabWidgetLabel->setText("Temperature: " + QString::fromStdString(oss.str()));
+                    break;
+                default:
+                    ui->tabWidgetLabel->setText("Error");
+                    break;
+
+
+
+                }
+
+            }
+        }
+    }
+
+
+}
+
+
+
 
