@@ -1,2 +1,7 @@
 # WeatherApp
-Just a simple self improvement weather app project with POCO c++ and QT
+Just a simple self improvement weather app project
+* Poco
+* QT
+* OpenWeatherMap  API (Student package)
+
+  Unfinished since i ran out of student package credits...
